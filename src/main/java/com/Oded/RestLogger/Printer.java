@@ -33,7 +33,9 @@ public class Printer extends AbstractActor {
                 .match(
                         String.class,
                         s -> {
-                            System.out.println("in printer\n");
+                            System.out.println("printing to logger\n");
+                            writer.write(s + "\n");
+                            writer.flush();
                             log.info("Received String message: {}", s);
                         })
                 .matchAny(o -> log.info("received unknown message"))

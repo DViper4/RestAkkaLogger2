@@ -4,6 +4,8 @@ import akka.actor.ActorSystem;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import com.typesafe.config.Config;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.typesafe.config.ConfigFactory;
 
 @SpringBootApplication
 @RestController
@@ -30,8 +33,11 @@ public class AkkaQuickstart {
 
     public AkkaQuickstart(){
         system = ActorSystem.create("helloakka");
+        Config conf = ConfigFactory.load();
+        System.out.println(conf.getString("log-file.path"));
+
         try {
-            FileWriter writer = new FileWriter("app.log");;
+            FileWriter writer = new FileWriter(conf.getString("log-file.path"));;
             BufferedWriter bw = new BufferedWriter(writer);
 
             final ActorRef printerActor =
