@@ -19,6 +19,11 @@ public class Printer extends AbstractActor {
         return Props.create(Printer.class, () -> new Printer(bw));
     }
 
+    static public class PrintOrder {
+        public PrintOrder() {
+        }
+    }
+
     static public class LogMessage {
         public final String message;
 
@@ -31,12 +36,9 @@ public class Printer extends AbstractActor {
     public akka.actor.AbstractActor.Receive createReceive(){
         return receiveBuilder()
                 .match(
-                        String.class,
+                        PrintOrder.class,
                         s -> {
-                            System.out.println("printing to logger\n");
-                            writer.write(s + "\n");
                             writer.flush();
-                            log.info("Received String message: {}", s);
                         })
                 .matchAny(o -> log.info("received unknown message"))
                 .build();

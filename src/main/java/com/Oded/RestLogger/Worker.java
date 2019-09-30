@@ -28,8 +28,10 @@ import javax.swing.text.MaskFormatter;
 
 public class Worker extends AbstractActor {
     private final ActorRef printerActor;
+    private final BufferedWriter writer;
 
-    public Worker(ActorRef printerActor){
+    public Worker(ActorRef printerActor, BufferedWriter bw){
+        writer = bw;
         this.printerActor = printerActor;
     }
     static public class LogLevel {
@@ -52,12 +54,13 @@ public class Worker extends AbstractActor {
         return receiveBuilder()
                 .match(Message.class, ll -> {
                     System.out.println("in worker");
-                    printerActor.tell(ll.log_message, getSelf());
+                    writer.write(ll.log_message + "\n");
+                    printerActor.tell(new Printer.PrintOrder(), getSelf());
                 })
                 .build();
     }
 
-    public static Props props(ActorRef printerActor) {
-        return Props.create(Worker.class, () -> new Worker(printerActor));
+    public static Props props(ActorRef printerActor, BufferedWriter bw) {
+        return Props.create(Worker.class, () -> new Worker(printerActor, bw));
     }
 }

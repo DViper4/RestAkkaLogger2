@@ -42,9 +42,9 @@ public class AkkaQuickstart {
 
             final ActorRef printerActor =
                     system.actorOf(Printer.props(bw), "printerActor");
-            workers[0] = system.actorOf(Worker.props(printerActor), "workerActor1");
-            workers[1] = system.actorOf(Worker.props(printerActor), "workerActor2");
-            workers[2] = system.actorOf(Worker.props(printerActor), "workerActor3");
+            workers[0] = system.actorOf(Worker.props(printerActor, bw), "workerActor1");
+            workers[1] = system.actorOf(Worker.props(printerActor, bw), "workerActor2");
+            workers[2] = system.actorOf(Worker.props(printerActor, bw), "workerActor3");
         } catch (IOException ioe) {
         } finally {
         }
