@@ -10,30 +10,19 @@ import akka.event.LoggingAdapter;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
-import akka.http.javadsl.unmarshalling.StringUnmarshallers;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
-import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import scala.concurrent.duration.FiniteDuration;
-
-import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.PatternsCS.ask;
 
 public class AkkaQuickstart extends AllDirectives {
 
@@ -42,13 +31,11 @@ public class AkkaQuickstart extends AllDirectives {
     private Config conf;
 
     public static void main(String[] args) throws Exception {
-        // boot up server using the route as defined below
         ActorSystem system = ActorSystem.create("routes");
 
         final Http http = Http.get(system);
         final ActorMaterializer materializer = ActorMaterializer.create(system);
 
-        //In order to access all directives we need an instance where the routes are define.
         AkkaQuickstart app = new AkkaQuickstart(system);
 
         final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute().flow(system, materializer);
@@ -56,11 +43,11 @@ public class AkkaQuickstart extends AllDirectives {
                 ConnectHttp.toHost("localhost", 8080), materializer);
 
         System.out.println("Server online at http://localhost:8080/\nPress RETURN to stop...");
-        System.in.read(); // let it run until user presses return
+        System.in.read();
 
         binding
-                .thenCompose(ServerBinding::unbind) // trigger unbinding from the port
-                .thenAccept(unbound -> system.terminate()); // and shutdown when done
+                .thenCompose(ServerBinding::unbind)
+                .thenAccept(unbound -> system.terminate());
     }
 
     private AkkaQuickstart(final ActorSystem system) {
