@@ -22,6 +22,7 @@ import com.typesafe.config.ConfigFactory;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
 import java.util.concurrent.CompletionStage;
 
 public class AkkaQuickstart extends AllDirectives {
@@ -37,10 +38,16 @@ public class AkkaQuickstart extends AllDirectives {
         final ActorMaterializer materializer = ActorMaterializer.create(system);
 
         AkkaQuickstart app = new AkkaQuickstart(system);
-
-        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute().flow(system, materializer);
+        HashSet<String> levels = new HashSet();
+        levels.add("trace");
+        levels.add("debug");
+        levels.add("info");
+        levels.add("warn");
+        levels.add("error");
+        levels.add("critical");
+        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute(levels).flow(system, materializer);
         final CompletionStage<ServerBinding> binding = http.bindAndHandle(routeFlow,
-                ConnectHttp.toHost("localhost", 8080), materializer);
+                ConnectHttp.toHost("0.0.0.0", 8080), materializer);
 
         System.out.println("Server online at http://localhost:8080/\nPress RETURN to stop...");
         System.in.read();
@@ -56,20 +63,26 @@ public class AkkaQuickstart extends AllDirectives {
         auction = system.actorOf(Printer.props(log_path), "auction");
     }
 
-    private Route createRoute() {
+    private Route createRoute(HashSet<String> levels) {
+
         return concat(
                 path("log", () -> concat(
                         put(() ->
-                                parameter("level", level ->
-                                        parameter("content", content -> {
-                                            // place a bid, fire-and-forget
-                                            auction.tell(new LogMessage(level, content), ActorRef.noSender());
-                                            return complete(StatusCodes.ACCEPTED, "log message printed");
-                                        })
+                                parameter("level", level -> {
+                                    if (levels.contains(level))
+                                            parameter("content", content -> {
+
+                                                auction.tell(new LogMessage(level, content), ActorRef.noSender());
+                                                return complete(StatusCodes.ACCEPTED, "log message printed");
+                                            });
+
+                                            return complete(StatusCodes.BAD_REQUEST, "level not one of {trace, debug, info, warn, error, critical}");
+                                        }
+
                                 )))),
-                path("hello", () ->
+                path("help", () ->
                         get(() ->
-                                complete("<h1>Say hello to akka-http</h1>")))
+                                complete("format: log?level=XXX&content=XXX\n")))
                 );
     }
 
