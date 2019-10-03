@@ -22,7 +22,6 @@ import com.typesafe.config.ConfigFactory;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
 import java.util.concurrent.CompletionStage;
 
 public class AkkaQuickstart extends AllDirectives {
@@ -38,18 +37,11 @@ public class AkkaQuickstart extends AllDirectives {
         final ActorMaterializer materializer = ActorMaterializer.create(system);
 
         AkkaQuickstart app = new AkkaQuickstart(system);
-        HashSet<String> levels = new HashSet();
-        levels.add("trace");
-        levels.add("debug");
-        levels.add("info");
-        levels.add("warn");
-        levels.add("error");
-        levels.add("critical");
-        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute(levels).flow(system, materializer);
+        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute().flow(system, materializer);
         final CompletionStage<ServerBinding> binding = http.bindAndHandle(routeFlow,
                 ConnectHttp.toHost("0.0.0.0", 8080), materializer);
 
-        System.out.println("Server online at http://localhost:8080/\nPress RETURN to stop...");
+        System.out.println("Server listening on port 8080/\nPress RETURN to stop...\n");
         System.in.read();
 
         binding
@@ -63,27 +55,17 @@ public class AkkaQuickstart extends AllDirectives {
         auction = system.actorOf(Printer.props(log_path), "auction");
     }
 
-    private Route createRoute(HashSet<String> levels) {
-
+    private Route createRoute() {
         return concat(
                 path("log", () -> concat(
                         put(() ->
-                                parameter("level", level -> {
-                                    if (levels.contains(level))
-                                            parameter("content", content -> {
-
-                                                auction.tell(new LogMessage(level, content), ActorRef.noSender());
-                                                return complete(StatusCodes.ACCEPTED, "log message printed");
-                                            });
-
-                                            return complete(StatusCodes.BAD_REQUEST, "level not one of {trace, debug, info, warn, error, critical}");
-                                        }
-
-                                )))),
-                path("help", () ->
-                        get(() ->
-                                complete("format: log?level=XXX&content=XXX\n")))
-                );
+                                parameter("level", level ->
+                                        parameter("content", content -> {
+                                            // place a bid, fire-and-forget
+                                            auction.tell(new LogMessage(level, content), ActorRef.noSender());
+                                            return complete(StatusCodes.ACCEPTED, "log message printed\n");
+                                        })
+                                )))));
     }
 
     static class LogMessage {
@@ -113,9 +95,9 @@ public class AkkaQuickstart extends AllDirectives {
                     .match(AkkaQuickstart.LogMessage.class, log_message -> {
                         writer.append(log_message.level + " : " + log_message.content + "\n");
                         writer.flush();
-                        log.info("LogMessage complete: {}, {}", log_message.level, log_message.content);
+                        log.info("LogMessage complete: level = {}, content = {}\n", log_message.level, log_message.content);
                     })
-                    .matchAny(o -> log.info("Invalid message"))
+                    .matchAny(o -> log.info("Invalid message\n"))
                     .build();
         }
     }

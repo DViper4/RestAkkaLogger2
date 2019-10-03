@@ -1,0 +1,37 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: akkaserverservice
+spec:
+  selector:
+    app: akkaserver
+  ports:
+    - protocol: "TCP"
+      # Port accessible inside cluster
+      port: 8081
+      # Port to forward to inside the pod
+      targetPort: 8080
+      # Port accessible outside cluster
+      nodePort: 30001
+  type: LoadBalancer
+ 
+ 
+ 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akkaserverdeployment
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: akkaserver
+    spec:
+      containers:
+        - name: akkaserver
+          image: akka-server-image
+          ports:
+            - containerPort: 8080
