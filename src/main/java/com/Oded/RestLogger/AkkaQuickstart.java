@@ -66,7 +66,11 @@ public class AkkaQuickstart extends AllDirectives {
                                             auction.tell(new LogMessage(level, content), ActorRef.noSender());
                                             return complete(StatusCodes.ACCEPTED, "log message printed");
                                         })
-                                )))));
+                                )))),
+                path("hello", () ->
+                        get(() ->
+                                complete("<h1>Say hello to akka-http</h1>")))
+                );
     }
 
     static class LogMessage {
