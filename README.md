@@ -1,5 +1,7 @@
 # RestAkkaLogger2
 
+0. start docker VM: ```docker-machine start default```
+
 1. sh build_and_deploy.sh
 
 2. From terminal, run ```docker-machine ip``` (activate machine if its turned off).

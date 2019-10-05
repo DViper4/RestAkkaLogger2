@@ -40,7 +40,7 @@ public class AkkaQuickstart extends AllDirectives {
 
         final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute().flow(system, materializer);
         final CompletionStage<ServerBinding> binding = http.bindAndHandle(routeFlow,
-                ConnectHttp.toHost("localhost", 8080), materializer);
+                ConnectHttp.toHost("0.0.0.0", 8080), materializer);
 
         System.out.println("Server listening on port 8080/\nPress RETURN to stop...\n");
         System.in.read();
