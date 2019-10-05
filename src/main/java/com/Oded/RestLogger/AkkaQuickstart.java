@@ -25,6 +25,7 @@ public class AkkaQuickstart extends AllDirectives {
     private final ActorRef auction;
     private final String log_path;
     private Config conf;
+    private HashSet<String> allowed_levels;
     static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     //    static final LocalDateTime now = LocalDateTime.now();
 
@@ -36,14 +37,8 @@ public class AkkaQuickstart extends AllDirectives {
 
         AkkaQuickstart app = new AkkaQuickstart(system);
 
-        HashSet<String> allowed_levels = new HashSet<>();
-        allowed_levels.add("trace");
-        allowed_levels.add("debug");
-        allowed_levels.add("info");
-        allowed_levels.add("warn");
-        allowed_levels.add("error");
-        allowed_levels.add("critical");
-        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute(allowed_levels).flow(system, materializer);
+
+        final Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = app.createRoute().flow(system, materializer);
         final CompletionStage<ServerBinding> binding = http.bindAndHandle(routeFlow,
                 ConnectHttp.toHost("localhost", 8080), materializer);
 
@@ -55,16 +50,24 @@ public class AkkaQuickstart extends AllDirectives {
                 .thenAccept(unbound -> system.terminate());
     }
 
-    private AkkaQuickstart(final ActorSystem system) {
+    AkkaQuickstart(final ActorSystem system) {
         conf =  ConfigFactory.load();
         log_path = conf.getString("log-file.path");
         auction = system.actorOf(Printer.props(log_path, dtf), "auction");
+
+        allowed_levels = new HashSet<>();
+        allowed_levels.add("trace");
+        allowed_levels.add("debug");
+        allowed_levels.add("info");
+        allowed_levels.add("warn");
+        allowed_levels.add("error");
+        allowed_levels.add("critical");
     }
 
-    private Route createRoute(HashSet<String> allowed_levels) {
+    Route createRoute() {
         return parameter("level", level ->
                 validate(() -> allowed_levels.contains(level),
-                        "Level not allowed",
+                        "Not a valid level\n",
                         () -> concat(
                                 put(() ->
                                         parameter("level", level2 ->
