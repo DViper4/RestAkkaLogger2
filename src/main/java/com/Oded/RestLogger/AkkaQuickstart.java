@@ -6,9 +6,7 @@ import akka.actor.ActorSystem;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.HttpResponse;
-import akka.http.javadsl.model.StatusCodes;
+import akka.http.javadsl.model.*;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import akka.stream.ActorMaterializer;
@@ -65,17 +63,33 @@ public class AkkaQuickstart extends AllDirectives {
     }
 
     Route createRoute() {
-        return parameter("level", level ->
-                validate(() -> allowed_levels.contains(level),
-                        "Not a valid level\n",
-                        () -> concat(
-                                put(() ->
-                                        parameter("level", level2 ->
-                                                parameter("content", content -> {
-                                                    auction.tell(new LogMessage(level2, content), ActorRef.noSender());
-                                                    return complete(StatusCodes.ACCEPTED, "log message printed\n");
-                                                })
-                                        ))))
+        return concat(
+                put(() ->
+                        concat(
+                    pathSingleSlash(() ->
+                            complete(HttpEntities.create(ContentTypes.TEXT_HTML_UTF8, "<html><body>Hello world!</body></html>"))
+                    ),
+                    path("log", () ->
+
+                    parameter("level", level ->
+                    validate(() -> allowed_levels.contains(level),
+                            "Not a valid level\n",
+                            () -> concat(
+                                    put(() ->
+                                            parameter("level", level2 ->
+                                                    parameter("content", content -> {
+                                                        auction.tell(new LogMessage(level2, content), ActorRef.noSender());
+                                                        return complete(StatusCodes.ACCEPTED, "log message printed\n");
+                                                    })
+                                            ))))
+            )
+            )
+                )),
+                get(
+                        () -> pathSingleSlash(() ->
+                                complete(HttpEntities.create(ContentTypes.TEXT_HTML_UTF8, "<html><body>Hello world!</body></html>"))
+                        )
+                )
         );
     }
 }

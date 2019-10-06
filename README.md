@@ -13,3 +13,15 @@ curl -X PUT 'http://[DOCKER VM IP]:8080/log?level=debug&content=AAAAAAAAAF'
 ```
 
 4. Level must be one of {trace, debug, info, warn, error, critical}. Otherwise an error message will be returned.
+
+
+
+
+
+# Scenarios:
+1) After creating container, cannot curl (Connection refused):
+- turn off VM ('default')
+- ```docker-machine start default```
+- ```docker-machine env```
+- ```eval $(docker-machine env)```
+- try to create conainer again: ```docker run -t -p 8080:8080 --name akka-server-container akka-server-image```
